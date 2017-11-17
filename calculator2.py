@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# _*_ coding:utf-8 _*_
 
 import sys
 
@@ -17,27 +18,41 @@ def tax_cal(all_salary):
     salary_list = []
 
     for key,value in all_salary.items():
-        employee_num.append(key)
-        salary_list.append(int(value))
-
+        try:
+            employee_num.append(int(key))
+            salary_list.append(int(value))
+        except:
+            raise ValueError
+    # print(salary_list,employee_num)
     tax_rate = [0.03,0.1,0.2,0.25,0.3,0.35,0.45]    #??
     quick_cal = [0,105,555,1005,2755,5505,13505]    # ?????
     tax_amount = [0,1500,4500,9000,35000,55000,80000] #??????
 
     for salary in salary_list:
         try:
-            # employee_salary = int(salary)   #??????
             insurance = int(salary) * 0.08 + int(salary) * 0.02 \
             + int(salary) * 0.005 + int(salary) * 0.06  #????
+            # print("insurance: ",insurance)
             if int(salary) > 3500:
                 taxable_income = int(salary) - insurance - 3500 #????????
             else:
-                
+                taxable_income = 0
+            # print("taxable_income: ",taxable_income)
             all_insurance.append(insurance)
+            # print("all_insurance: ",all_insurance)
             for i in range(6,-1,-1):
-                if taxable_income > tax_amount[i]:
-                    tax = taxable_income * tax_rate[i] - quick_cal[i]
+                if taxable_income == 0:
+                    # print(tax_amount[i])
+                    tax = 0
                     all_tax.append(tax)
+                    break
+                elif taxable_income > tax_amount[i]:
+                    # print(tax_amount[i])
+                    tax = taxable_income * tax_rate[i] - quick_cal[i]
+                    # print(tax)
+                    all_tax.append(tax)
+                    break
+            # print("all_tax: ",all_tax)
         except:
             raise ValueError
 
@@ -51,8 +66,11 @@ def after_tax(all_tax,all_insurance,salary_list):
     return all_after_tax
 
 if __name__ == '__main__':
-    all_salary = dispose_arg()
-    all_tax, all_insurance, salary_list, employee_num = tax_cal(all_salary)
-    all_after_tax = after_tax(all_tax,all_insurance,salary_list)
-    for i in range(len(sys.argv[1:])):
-        print(employee_num[i] + ':' + format(float(all_after_tax[i]),'.2f'))
+    try:
+        all_salary = dispose_arg()
+        all_tax, all_insurance, salary_list, employee_num = tax_cal(all_salary)
+        all_after_tax = after_tax(all_tax,all_insurance,salary_list)
+        for i in range(len(sys.argv[1:])):
+            print(employee_num[i] + ':' + format(float(all_after_tax[i]),'.2f'))
+    except ValueError:
+        print("Parameter Error")
