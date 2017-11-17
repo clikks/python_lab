@@ -71,6 +71,6 @@ if __name__ == '__main__':
         all_tax, all_insurance, salary_list, employee_num = tax_cal(all_salary)
         all_after_tax = after_tax(all_tax,all_insurance,salary_list)
         for i in range(len(sys.argv[1:])):
-            print(employee_num[i] + ':' + format(float(all_after_tax[i]),'.2f'))
+            print(str(employee_num[i]) + ':' + str(format(float(all_after_tax[i]),'.2f')))
     except ValueError:
         print("Parameter Error")
