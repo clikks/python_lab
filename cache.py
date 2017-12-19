@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json, base64, pickle
+import json
+import base64
+import pickle
 from functools import wraps
 
-class RedisCache:
 
+class RedisCache:
     def __init__(self, redis_client):
         self._redis = redis_client
 
@@ -13,21 +15,18 @@ class RedisCache:
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                data = pickle.dumps((func.__name__,args))
+                data = pickle.dumps((func.__name__, args))
                 key = base64.b64encode(data)
 
                 if timeout == 0:
                     return func(*args, **kwargs)
                 result = self._redis.get(key)
                 if result:
-                    result = str(result,encoding='utf-8')
-                    # print(result)
-                    # result = eval(result)
+                    result = str(result, encoding='utf-8')
                     result = json.loads(result)
-                    # print(result,type(result))
                     return result
                 else:
-                    new = func(*args,**kwargs)
+                    new = func(*args, **kwargs)
                     value = json.dumps(new)
                     # key = func.__name__
                     self._redis.set(key, value, ex=timeout)
