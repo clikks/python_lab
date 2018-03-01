@@ -12,8 +12,13 @@ def get_rank(user_id):
     db = client.shiyanlou
     contests = db.contests
 
-    group = {'$group': {'_id': '$user_id', 'score': {'$sum': '$score'}, 'submit_time': {'$sum': '$submit_time'}}}
-    sort = {'$sort': {'score': -1, 'sumit_time': 1}}
+    group = {'$group': {
+                '_id': '$user_id',
+                'score': {'$sum': '$score'},
+                'submit_time': {'$sum': '$submit_time'}
+            }
+    }
+    sort = {'$sort': {'score': -1, 'submit_time': 1}}
     data = contests.aggregate([group, sort])
     for index, item in enumerate(data):
         if item.get('_id') == user_id:
