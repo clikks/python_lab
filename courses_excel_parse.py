@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'lux'
 
+from multiprocessing import Process
 import datetime
 import os
 
@@ -10,7 +11,10 @@ from openpyxl import load_workbook, Workbook
 
 file = os.path.join(os.getcwd(), 'courses.xlsx')
 
+
 def combine():
+    start = datetime.datetime.now()
+    print("func 'combine is runing")
     inwb = load_workbook(file)
     student = inwb['students']
     study_time = inwb['time']
@@ -30,27 +34,51 @@ def combine():
             else:
                 combine.cell(row=index+1, column=student.max_column+1, value=time_value)
     inwb.save('courses.xlsx')
+    end = datetime.datetime.now()
+    print("func combine finished, used time {}s".format((end-start).seconds))
+
+
+def generate_wb(year, row_title, data_dict):
+    child_start = datetime.datetime.now()
+    print('Run child process {}'.format(os.getpid()))
+    newwb = Workbook()
+    sheet = newwb.active
+    sheet.title = str(year)
+    sheet.append(row_title)
+    for date in data_dict.keys():
+        if date.year == year:
+            cells = [date] + data_dict.get(date)
+            sheet.append(cells)
+    filename = str(year) + '.xlsx'
+    newwb.save(filename)
+    child_end = datetime.datetime.now()
+    print('Process {} finished, used time {}s'.format(os.getpid(), (child_end - child_start).seconds))
 
 
 def split():
+    start = datetime.datetime.now()
+    print("func 'split' is running")
     inwb = load_workbook(file)
-    combine = inwb['combine']    
+    combine = inwb['combine']
     sheet_dict = dict()
     for index, row in enumerate(combine.iter_rows()):
         if index == 0:
-            continue
+            row_title = [i.value for i in row]
         else:
-            sheet_data[row[0].value] = [i.value for i in row[1:]]
-    years = [key.year for key in sheet_dict.keys()]
+            sheet_dict[row[0].value] = [i.value for i in row[1:]]
+    years = set(key.year for key in sheet_dict.keys())
     for year in years:
-        for 
-        datetime.datetime.strptime(key, '%Y-%m-%d %H:%M:%S')
-        
-
-
-
+        p = Process(target=generate_wb, args=(year, row_title, sheet_dict))
+        p.start()
+        p.join()
+    end = datetime.datetime.now()
+    print("func 'split' is finished, used time {}s".format((end-start).seconds))
 
 
 if __name__ == '__main__':
+    print('Program run...')
+    starttime = datetime.datetime.now()
     combine()
     split()
+    endtime = datetime.datetime.now()
+    print('Program is finished runing. used time {}s'.format((endtime-starttime).seconds))
