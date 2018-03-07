@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'lux'
 
-from multiprocessing import Process
+from multiprocessing import Pool
 import datetime
 import os
 
@@ -14,28 +14,38 @@ file = os.path.join(os.getcwd(), 'courses.xlsx')
 
 def combine():
     start = datetime.datetime.now()
-    print("func 'combine is runing")
+    print("func 'combine' is runing")
     inwb = load_workbook(file)
     student = inwb['students']
     study_time = inwb['time']
     inwb.create_sheet('combine')
     combine = inwb['combine']
     time_dict = dict()
-    for row in range(2, study_time.max_row+1):
-        course = 'B' + str(row)
-        time = 'C' + str(row)
-        time_dict[study_time[course].value] = study_time[time].value
+    for index, row in enumerate(study_time.iter_rows()):
+        if index == 0:
+            title = [row[-1].value]
+        else:
+            time_dict[row[1].value] = row[-1].value
+        # course = 'B' + str(row)
+        # time = 'C' + str(row)
+        # time_dict[study_time[course].value] = study_time[time].value
     for index, row in enumerate(student.iter_rows()):
-        for seq, data in enumerate(row):
-            combine.cell(row=index+1, column=seq+1, value=data.value)
-            time_value = time_dict.get(data.value)
-            if seq == 0:
-                combine.cell(row=index+1, column=student.max_column+1, value=study_time['C1'].value)
-            else:
-                combine.cell(row=index+1, column=student.max_column+1, value=time_value)
+        if index == 0:
+            combine_title = [i.value for i in row] + title
+            combine.append(combine_title)
+        else:
+            cell_content = [i.value for i in row] + [time_dict.get(row[1].value)]
+            combine.append(cell_content)
+            # for seq, data in enumerate(row):
+            #     combine.cell(row=index+1, column=seq+1, value=data.value)
+            #     time_value = time_dict.get(data.value)
+            #     if seq == 0:
+            #         combine.cell(row=index+1, column=student.max_column+1, value=study_time['C1'].value)
+            #     else:
+            #         combine.cell(row=index+1, column=student.max_column+1, value=time_value)
     inwb.save('courses.xlsx')
     end = datetime.datetime.now()
-    print("func combine finished, used time {}s".format((end-start).seconds))
+    print("func 'combine' finished, used time {}s".format((end-start).seconds))
 
 
 def generate_wb(year, row_title, data_dict):
@@ -67,10 +77,11 @@ def split():
         else:
             sheet_dict[row[0].value] = [i.value for i in row[1:]]
     years = set(key.year for key in sheet_dict.keys())
+    pool = Pool(processes=4)
     for year in years:
-        p = Process(target=generate_wb, args=(year, row_title, sheet_dict))
-        p.start()
-        p.join()
+        pool.apply_async(generate_wb, (year, row_title, sheet_dict))
+    pool.close()
+    pool.join()
     end = datetime.datetime.now()
     print("func 'split' is finished, used time {}s".format((end-start).seconds))
 
